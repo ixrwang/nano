@@ -14,7 +14,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
  */
 public class HttpServer {
 
-    private static final int SO_BACKLOG = 1024;
+    private static final int SO_BACKLOG = 1024 * 8;
     private int port;
 
     public HttpServer(int port) {
