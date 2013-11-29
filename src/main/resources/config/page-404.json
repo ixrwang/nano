@@ -1,0 +1,12 @@
+{
+    "view": "view",
+    "header": "header",
+    "footer": "footer",
+    "title": "index",
+    "segments": [
+        {
+            "layout": "m0",
+            "apps": ["404"]
+        },
+    ]
+}
