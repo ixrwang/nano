@@ -20,9 +20,6 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof HttpRequest) {
             HttpRequest req = (HttpRequest) msg;
-//            for (String name : req.headers().names()) {
-//                System.out.println(name + " : " + req.headers().get(name));
-//            }
             new RequestDispatcherSPI().invoke(new com.alibaba.utils.HttpRequest(req)).writeContext(ctx);
         }
     }

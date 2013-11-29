@@ -17,7 +17,6 @@ public class HttpServerInitializer extends ChannelInitializer<SocketChannel> {
         //SSLEngine engine = SecureChatSslContextFactory.getServerContext().createSSLEngine();
         //engine.setUseClientMode(false);
         //p.addLast("ssl", new SslHandler(engine));
-
         p.addLast("codec", new HttpServerCodec());
         p.addLast("handler", new HttpServerHandler());
     }
