@@ -6,9 +6,13 @@ import com.alibaba.config.SegmentConfig;
 import com.alibaba.utils.ContentType;
 import com.alibaba.utils.HttpRequest;
 import com.alibaba.utils.HttpResponse;
+import com.googlecode.htmlcompressor.compressor.Compressor;
+import com.googlecode.htmlcompressor.compressor.HtmlCompressor;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,19 +32,28 @@ public class AppStaticSPI {
             PageConfig pageConfig = ConfigEngine.getPageConfig(pageName);
             List<SegmentConfig> segmentsConfig = pageConfig.getSegments();
             List<String> apps = new ArrayList<String>();
+            StringWriter writer = new StringWriter();
             for (SegmentConfig segmentConfig : segmentsConfig) {
                 for (String appName : segmentConfig.getApps()) {
                     if (apps.contains(appName)) {
                         continue;
                     }
                     try {
-                        InputStream inputStream = this.getClass().getResource("/apps/" + appName + "/view." + suffix).openStream();
-                        res.content().writeBytes(inputStream, inputStream.available());
+                        String path = "/apps/" + appName + "/view." + suffix;
+                        InputStream inputStream = this.getClass().getResource(path).openStream();
+                        writer.write(IOUtils.toString(inputStream));
                     } catch (Exception ex) {
                     }
                     apps.add(appName);
                 }
             }
+            Compressor compressor = null;
+            if ("js".equals(suffix)) {
+                compressor = new HtmlCompressor().getJavaScriptCompressor();
+            } else if ("css".equals(suffix)) {
+                compressor = new HtmlCompressor().getJavaScriptCompressor();
+            }
+            res.content().writeBytes(compressor.compress(writer.toString()).getBytes());
         } catch (Exception ex) {
             return new HttpResponse(HttpResponseStatus.NOT_FOUND);
         }

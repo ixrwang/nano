@@ -1,19 +1,9 @@
 package com.alibaba.spi;
 
-import com.alibaba.config.ConfigEngine;
-import com.alibaba.config.PageConfig;
-import com.alibaba.config.SegmentConfig;
-import com.alibaba.fastjson.JSONReader;
-import com.alibaba.utils.ContentType;
 import com.alibaba.utils.HttpRequest;
 import com.alibaba.utils.HttpResponse;
+import com.googlecode.htmlcompressor.compressor.HtmlCompressor;
 import io.netty.handler.codec.http.HttpResponseStatus;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * StaticSPI : TODO: yuuji

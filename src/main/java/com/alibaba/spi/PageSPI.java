@@ -7,6 +7,7 @@ import com.alibaba.fastjson.JSONReader;
 import com.alibaba.utils.HtmlElement;
 import com.alibaba.utils.HttpRequest;
 import com.alibaba.utils.HttpResponse;
+import com.googlecode.htmlcompressor.compressor.HtmlCompressor;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -79,7 +80,10 @@ public class PageSPI {
             css.add("http://" + hosts + "/static/apps.css?v=" + pageConfig.getLastModified());
             context.put("js", js);
             context.put("css", css);
-            res.content().writeBytes(merge(context, "src/main/resources/config/" + pageConfig.getView() + ".vm").getBytes());
+            String html = merge(context, "src/main/resources/config/" + pageConfig.getView() + ".vm");
+            HtmlCompressor htmlCompressor = new HtmlCompressor();
+            html = htmlCompressor.compress(html);
+            res.content().writeBytes(html.getBytes());
         } catch (Exception ex) {
             return new HttpResponse(HttpResponseStatus.NOT_FOUND);
         }
