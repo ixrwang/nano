@@ -8,6 +8,8 @@ import com.alibaba.utils.HttpRequest;
 import com.alibaba.utils.HttpResponse;
 import com.googlecode.htmlcompressor.compressor.Compressor;
 import com.googlecode.htmlcompressor.compressor.HtmlCompressor;
+import com.googlecode.htmlcompressor.compressor.YuiCssCompressor;
+import com.googlecode.htmlcompressor.compressor.YuiJavaScriptCompressor;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.apache.commons.io.IOUtils;
 
@@ -42,6 +44,7 @@ public class AppStaticSPI {
                         String path = "/apps/" + appName + "/view." + suffix;
                         InputStream inputStream = this.getClass().getResource(path).openStream();
                         writer.write(IOUtils.toString(inputStream));
+                        writer.flush();
                     } catch (Exception ex) {
                     }
                     apps.add(appName);
@@ -49,12 +52,13 @@ public class AppStaticSPI {
             }
             Compressor compressor = null;
             if ("js".equals(suffix)) {
-                compressor = new HtmlCompressor().getJavaScriptCompressor();
+                compressor = new YuiJavaScriptCompressor();
             } else if ("css".equals(suffix)) {
-                compressor = new HtmlCompressor().getJavaScriptCompressor();
+                compressor = new YuiCssCompressor();
             }
             res.content().writeBytes(compressor.compress(writer.toString()).getBytes());
         } catch (Exception ex) {
+            ex.printStackTrace();
             return new HttpResponse(HttpResponseStatus.NOT_FOUND);
         }
         return res;
