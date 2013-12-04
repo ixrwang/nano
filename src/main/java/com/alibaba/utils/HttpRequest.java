@@ -28,6 +28,10 @@ public class HttpRequest {
         setUri(source.getUri());
     }
 
+    public HttpRequest(String url) {
+        setUri(url);
+    }
+
     public void setUri(String uri) {
         this.uri = uri;
         uris = uri.split(URI_SPLIT);

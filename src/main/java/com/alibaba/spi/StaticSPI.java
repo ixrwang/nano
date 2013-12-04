@@ -22,8 +22,11 @@ import java.util.List;
 public class StaticSPI {
 
     public HttpResponse invoke(HttpRequest req) {
-        if ("apps".equals(req.getUriBefore(1))) {
-            return new AppStaticSPI().invoke(req);
+        if(req.getReferer() != null) {
+            HttpRequest referer = new HttpRequest(req.getReferer());
+            if ("apps".equals(req.getUriBefore(1)) && "pages".equals(referer.getUri(0))) {
+                return new AppStaticSPI().invoke(req);
+            }
         }
         return new HttpResponse(HttpResponseStatus.NOT_FOUND, null);
     }

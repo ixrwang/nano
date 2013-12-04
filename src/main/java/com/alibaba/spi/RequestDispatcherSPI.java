@@ -17,9 +17,7 @@ public class RequestDispatcherSPI {
         if ("/bad-request".equals(req.getUri())) {
             HttpResponse res = new HttpResponse(BAD_REQUEST, null);
             return res;
-        }
-
-        if ("pages".equals(req.getUri(0))) {
+        }else if ("pages".equals(req.getUri(0))) {
             return new PageSPI().invoke(req);
         } else if ("static".equals(req.getUri(0))) {
             return new StaticSPI().invoke(req);
