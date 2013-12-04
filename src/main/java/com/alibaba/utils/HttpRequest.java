@@ -18,10 +18,13 @@ public class HttpRequest {
     private String host;
     private String uri;
     private String[] uris;
+    private String referer;
 
     public HttpRequest(io.netty.handler.codec.http.HttpRequest source) {
         this.source = source;
         this.host = source.headers().get(HttpHeaders.Names.HOST);
+        this.referer = source.headers().get(HttpHeaders.Names.REFERER);
+        this.referer = StringUtils.substringAfter(this.referer, this.host);
         setUri(source.getUri());
     }
 
@@ -29,6 +32,9 @@ public class HttpRequest {
         this.uri = uri;
         uris = uri.split(URI_SPLIT);
         uris = ArrayUtils.removeElement(uris, StringUtils.EMPTY);
+        if ("/".equals(getUri()) || "index".equals(getUriBefore(0))) {
+            setUri("/pages/index.htm");
+        }
     }
 
     public io.netty.handler.codec.http.HttpRequest getSource() {
@@ -37,6 +43,10 @@ public class HttpRequest {
 
     public String getHost() {
         return host;
+    }
+
+    public String getReferer() {
+        return referer;
     }
 
     public String getUri() {

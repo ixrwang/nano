@@ -18,9 +18,7 @@ public class RequestDispatcherSPI {
             HttpResponse res = new HttpResponse(BAD_REQUEST, null);
             return res;
         }
-        if ("/".equals(req.getUri()) || "index".equals(req.getUriBefore(0))) {
-            req.setUri("/pages/index.htm");
-        }
+
         if ("pages".equals(req.getUri(0))) {
             return new PageSPI().invoke(req);
         } else if ("static".equals(req.getUri(0))) {

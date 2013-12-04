@@ -12,6 +12,15 @@ public class PageConfig {
     private String footer;
     private String title;
     private List<SegmentConfig> segments;
+    private long lastModified;
+
+    public long getLastModified() {
+        return lastModified;
+    }
+
+    public void setLastModified(long lastModified) {
+        this.lastModified = lastModified;
+    }
 
     public String getView() {
         return view;

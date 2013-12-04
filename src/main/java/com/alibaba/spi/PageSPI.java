@@ -1,5 +1,6 @@
 package com.alibaba.spi;
 
+import com.alibaba.config.ConfigEngine;
 import com.alibaba.config.PageConfig;
 import com.alibaba.config.SegmentConfig;
 import com.alibaba.fastjson.JSONReader;
@@ -33,12 +34,6 @@ public class PageSPI {
         engine.init();
     }
 
-    private PageConfig config(String pageName) throws IOException {
-        InputStream inputStream = this.getClass().getResource("/config/page-" + pageName + ".json").openStream();
-        JSONReader reader = new JSONReader(new InputStreamReader(inputStream));
-        return reader.readObject(PageConfig.class);
-    }
-
     private HtmlElement mergeLayout(Context context, String name) {
         return new HtmlElement(merge(context, "src/main/resources/layout/" + name + ".vm"));
     }
@@ -59,7 +54,7 @@ public class PageSPI {
         String pageName = req.getUriBefore(1);
         HttpResponse res = new HttpResponse();
         try {
-            PageConfig pageConfig = config(pageName);
+            PageConfig pageConfig = ConfigEngine.getPageConfig(pageName);
             Context context = new VelocityContext();
             context.put("pageName", pageName);
             context.put("title", pageConfig.getTitle());
@@ -79,9 +74,9 @@ public class PageSPI {
             }
             context.put("segments", segments);
             List<String> js = new ArrayList<String>();
-            js.add("http://" + hosts + "/static/" + pageName + ".js?v=" + new Date().getTime());
+            js.add("http://" + hosts + "/static/apps.js?v=" + pageConfig.getLastModified());
             List<String> css = new ArrayList<String>();
-            css.add("http://" + hosts + "/static/" + pageName + ".css?v=" + new Date().getTime());
+            css.add("http://" + hosts + "/static/apps.css?v=" + pageConfig.getLastModified());
             context.put("js", js);
             context.put("css", css);
             res.content().writeBytes(merge(context, "src/main/resources/config/" + pageConfig.getView() + ".vm").getBytes());
