@@ -1,5 +1,6 @@
 package com.alibaba.config;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -7,12 +8,30 @@ import java.util.List;
  * yuuji 12:05 PM 11/25/13
  */
 public class PageConfig {
+    private String pageName;
     private String view;
     private String header;
     private String footer;
     private String title;
     private List<SegmentConfig> segments;
     private long lastModified;
+    private File file;
+
+    public String getPageName() {
+        return pageName;
+    }
+
+    public void setPageName(String pageName) {
+        this.pageName = pageName;
+    }
+
+    public File getFile() {
+        return file;
+    }
+
+    public void setFile(File file) {
+        this.file = file;
+    }
 
     public long getLastModified() {
         return lastModified;

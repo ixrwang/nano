@@ -1,12 +1,11 @@
 package com.alibaba.spi;
 
-import com.alibaba.config.ConfigEngine;
-import com.alibaba.config.PageConfig;
-import com.alibaba.config.SegmentConfig;
+import com.alibaba.config.*;
 import com.alibaba.fastjson.JSONReader;
 import com.alibaba.utils.HtmlElement;
 import com.alibaba.utils.HttpRequest;
 import com.alibaba.utils.HttpResponse;
+import com.alibaba.utils.ResourceUtils;
 import com.googlecode.htmlcompressor.compressor.HtmlCompressor;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.apache.velocity.Template;
@@ -14,13 +13,11 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.context.Context;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * PageSPI : TODO: yuuji
@@ -31,61 +28,89 @@ public class PageSPI {
     private static VelocityEngine engine;
 
     static {
-        engine = new VelocityEngine();
-        engine.init();
+        try {
+            Properties properties = new Properties();
+            properties.load(ResourceUtils.getInputStream("/velocity.properties"));
+            engine = new VelocityEngine();
+            engine.init(properties);
+        } catch (Exception ex) {
+            throw new Error(ex);
+        }
     }
 
-    private HtmlElement mergeLayout(Context context, String name) {
-        return new HtmlElement(merge(context, "src/main/resources/layout/" + name + ".vm"));
-    }
-
-    private HtmlElement mergeApp(Context context, String name) {
-        return new HtmlElement(merge(context, "src/main/resources/apps/" + name + "/view.vm"));
-    }
-
-    private String merge(Context context, String name) {
+    private String merge(Context context, File file) {
+        String name = ResourceUtils.getClassPath(file);
         StringWriter writer = new StringWriter();
         Template template = engine.getTemplate(name);
         template.merge(context, writer);
         return writer.toString();
     }
 
+    private Context context(PageConfig pageConfig) {
+        Context context = new VelocityContext();
+        context.put("title", pageConfig.getTitle());
+        context.put("pageName", pageConfig.getPageName());
+        File headerFile = ConfigEngine.getLayoutConfig(pageConfig.getHeader()).getFile();
+        String headerHtml = merge(new VelocityContext(), headerFile);
+        context.put("header", new HtmlElement(headerHtml));
+        File footerFile = ConfigEngine.getLayoutConfig(pageConfig.getFooter()).getFile();
+        String footerHtml = merge(new VelocityContext(), footerFile);
+        context.put("footer", new HtmlElement(footerHtml));
+        return context;
+    }
+
     public HttpResponse invoke(HttpRequest req) {
         String hosts = req.getHost();
         String pageName = req.getUriBefore(1);
         HttpResponse res = new HttpResponse();
+        boolean isPageJs = false, isPageCss = false;
         try {
             PageConfig pageConfig = ConfigEngine.getPageConfig(pageName);
-            Context context = new VelocityContext();
-            context.put("pageName", pageName);
-            context.put("title", pageConfig.getTitle());
-            context.put("header", mergeLayout(new VelocityContext(), pageConfig.getHeader()));
-            context.put("footer", mergeLayout(new VelocityContext(), pageConfig.getFooter()));
+            Context context = context(pageConfig);
             List<SegmentConfig> segmentsConfig = pageConfig.getSegments();
             List<HtmlElement> segments = new ArrayList<HtmlElement>();
             for (SegmentConfig segmentConfig : segmentsConfig) {
                 List<HtmlElement> apps = new ArrayList<HtmlElement>();
                 for (String appName : segmentConfig.getApps()) {
-                    apps.add(mergeApp(new VelocityContext(), appName));
+                    AppConfig appConfig = ConfigEngine.getAppConfig(appName);
+                    if (appConfig.getJs() != null) {
+                        isPageJs = true;
+                    }
+                    if (appConfig.getCss() != null) {
+                        isPageCss = true;
+                    }
+                    apps.add(new HtmlElement(merge(context, appConfig.getView())));
                 }
-                VelocityContext layoutContext = new VelocityContext();
+                Context layoutContext = new VelocityContext();
                 layoutContext.put("apps", apps);
-                HtmlElement layout = mergeLayout(layoutContext, segmentConfig.getLayout());
-                segments.add(layout);
+                LayoutConfig layoutConfig = ConfigEngine.getLayoutConfig(segmentConfig.getLayout());
+                if (layoutConfig.getJs() != null) {
+                    isPageJs = true;
+                }
+                if (layoutConfig.getCss() != null) {
+                    isPageCss = true;
+                }
+                String layoutHtml = merge(layoutContext, layoutConfig.getView());
+                segments.add(new HtmlElement(layoutHtml));
             }
             context.put("segments", segments);
-            List<String> js = new ArrayList<String>();
-            js.add("http://" + hosts + "/static/apps.js?v=" + pageConfig.getLastModified());
-            List<String> css = new ArrayList<String>();
-            css.add("http://" + hosts + "/static/apps.css?v=" + pageConfig.getLastModified());
-            context.put("js", js);
-            context.put("css", css);
-            String html = merge(context, "src/main/resources/config/" + pageConfig.getView() + ".vm");
+            LayoutConfig layoutConfig = ConfigEngine.getLayoutConfig(pageConfig.getView());
+            if (isPageJs || layoutConfig.getJs() != null) {
+                String pageJs = "http://" + hosts + "/static/page.js?v=" + pageConfig.getLastModified();
+                context.put("js", new String[]{pageJs});
+            }
+            if (isPageCss || layoutConfig.getCss() != null) {
+                String pageCss = "http://" + hosts + "/static/page.css?v=" + pageConfig.getLastModified();
+                context.put("css", new String[]{pageCss});
+            }
+            String html = merge(context, layoutConfig.getView());
             HtmlCompressor htmlCompressor = new HtmlCompressor();
             html = htmlCompressor.compress(html);
             res.content().writeBytes(html.getBytes());
         } catch (Exception ex) {
-            return new HttpResponse(HttpResponseStatus.NOT_FOUND);
+            HttpResponse response = new HttpResponse(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            response.content().writeBytes(ex.toString().getBytes());
+            return response;
         }
         return res;
     }

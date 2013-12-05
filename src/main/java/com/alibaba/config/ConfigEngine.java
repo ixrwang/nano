@@ -1,14 +1,14 @@
 package com.alibaba.config;
 
 import com.alibaba.fastjson.JSONReader;
+import com.alibaba.utils.ResourceUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import javax.xml.crypto.Data;
+import java.io.*;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * ConfigEngine : TODO: yuuji
@@ -16,44 +16,156 @@ import java.util.Map;
  */
 public class ConfigEngine {
 
+    private static Map<String, AppConfig> appConfigMap = new HashMap<String, AppConfig>();
     private static Map<String, PageConfig> pageConfigMap = new HashMap<String, PageConfig>();
+    private static Map<String, LayoutConfig> layoutConfigMap = new HashMap<String, LayoutConfig>();
 
-    public static PageConfig getPageConfig(String pageName) throws IOException {
-        if (pageConfigMap.containsKey(pageName)) {
-            PageConfig pageConfig = pageConfigMap.get(pageName);
-            long lastModified = configLastModified(pageName);
-            if(lastModified == pageConfig.getLastModified()) {
-                return pageConfig;
-            } else {
-                pageConfigMap.remove(pageName);
-            }
-        }
-        PageConfig pageConfig = config(pageName);
-        pageConfigMap.put(pageName, pageConfig);
-        return pageConfig;
+    static {
+        loadPageConfig();
+        loadAppConfig();
+        loadLayoutConfig();
     }
 
-    private static long configLastModified(String pageName) {
+    public static LayoutConfig getLayoutConfig(String name) {
+        if (layoutConfigMap.containsKey(name)) {
+            LayoutConfig config = layoutConfigMap.get(name);
+            if (lastModified(config)) {
+                return config;
+            }
+        }
+        File file = ResourceUtils.getFile("/layout/" + name + ".vm");
+        if (!file.exists()) {
+            file = ResourceUtils.getFile("/layout/" + name);
+        }
+        loadLayoutConfig(file);
+        return layoutConfigMap.get(name);
+    }
+
+    public static PageConfig getPageConfig(String name) {
+        if (pageConfigMap.containsKey(name)) {
+            PageConfig config = pageConfigMap.get(name);
+            if (config.getLastModified() > config.getFile().lastModified()) {
+                return config;
+            }
+        }
+        File file = ResourceUtils.getFile("/config/page-" + name + ".json");
+        loadPageConfig(file);
+        return pageConfigMap.get(name);
+    }
+
+    public static AppConfig getAppConfig(String name) {
+        if (appConfigMap.containsKey(name)) {
+            AppConfig config = appConfigMap.get(name);
+            if (lastModified(config)) {
+                return config;
+            }
+        }
+        File file = ResourceUtils.getFile("/apps/" + name);
+        loadAppConfig(file);
+        return appConfigMap.get(name);
+    }
+
+
+    private static void loadLayoutConfig() {
+        File base = ResourceUtils.getFile("/layout/");
+        if (!base.exists() || !base.isDirectory()) {
+            return;
+        }
+        File[] files = base.listFiles();
+        for (File file : files) {
+            loadLayoutConfig(file);
+        }
+    }
+
+    private static void loadLayoutConfig(File file) {
+        LayoutConfig config = new LayoutConfig();
+        if (file.isFile()) {
+            config.setName(StringUtils.substringBefore(file.getName(), "."));
+            config.setView(file);
+            config.setFile(file);
+            config.setLastModified(new Date().getTime());
+        } else {
+            loadBaseConfig(config, file);
+        }
+        layoutConfigMap.put(config.getName(), config);
+    }
+
+    private static void loadPageConfig() {
+        File base = ResourceUtils.getFile("/config/");
+        if (!base.exists() || !base.isDirectory()) {
+            return;
+        }
+        File[] files = base.listFiles();
+        for (File file : files) {
+            if (file.isFile() && file.getName().indexOf("page-") == 0
+                    && StringUtils.substringBefore(file.getName(), ".").equals("json")) {
+                loadPageConfig(file);
+            }
+        }
+    }
+
+    private static void loadPageConfig(File file) {
         try {
-            File pageConfigFile = new File(configURL(pageName).toURI());
-            return pageConfigFile.lastModified();
+            String name = StringUtils.substringBetween(file.getName(), "page-", ".");
+            InputStream stream = new FileInputStream(file);
+            JSONReader reader = new JSONReader(new InputStreamReader(stream));
+            PageConfig pageConfig = reader.readObject(PageConfig.class);
+            pageConfig.setFile(file);
+            pageConfig.setPageName(name);
+            pageConfig.setLastModified(new Date().getTime());
+            pageConfigMap.put(name, pageConfig);
         } catch (Exception ex) {
             throw new Error(ex);
         }
     }
 
-
-    private static PageConfig config(String pageName) throws IOException {
-        InputStream inputStream = configURL(pageName).openStream();
-        JSONReader reader = new JSONReader(new InputStreamReader(inputStream));
-        PageConfig pageConfig = reader.readObject(PageConfig.class);
-        pageConfig.setLastModified(configLastModified(pageName));
-        return pageConfig;
+    private static void loadAppConfig() {
+        File base = ResourceUtils.getFile("/apps/");
+        if (!base.exists() || !base.isDirectory()) {
+            return;
+        }
+        File[] files = base.listFiles();
+        for (File file : files) {
+            loadAppConfig(file);
+        }
     }
 
-    private static URL configURL(String pageName) {
-        URL url = ConfigEngine.class.getResource("/config/page-" + pageName + ".json");
-        return url;
+    private static void loadAppConfig(File file) {
+        if (!file.isDirectory()) {
+            return;
+        }
+        AppConfig config = new AppConfig();
+        loadBaseConfig(config, file);
+        appConfigMap.put(config.getName(), config);
     }
 
+    private static void loadBaseConfig(BaseConfig config, File base) {
+        File[] files = base.listFiles();
+        for (File file : files) {
+            if ("view.vm".equals(file.getName())) {
+                config.setView(file);
+            } else if ("view.js".equals(file.getName())) {
+                config.setJs(file);
+            } else if ("view.css".equals(file.getName())) {
+                config.setCss(file);
+            }
+        }
+        config.setFile(base);
+        config.setName(base.getName());
+        config.setLastModified(new Date().getTime());
+    }
+
+    private static boolean lastModified(BaseConfig config) {
+        if (config.getView() != null
+                && config.getView().lastModified() > config.getLastModified()) {
+            return false;
+        } else if (config.getJs() != null
+                && config.getJs().lastModified() > config.getLastModified()) {
+            return false;
+        } else if (config.getCss() != null
+                && config.getCss().lastModified() > config.getLastModified()) {
+            return false;
+        }
+        return true;
+    }
 }
