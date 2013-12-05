@@ -148,6 +148,8 @@ public class ConfigEngine {
                 config.setJs(file);
             } else if ("view.css".equals(file.getName())) {
                 config.setCss(file);
+            } else if("i18n".equals(file.getName())) {
+                config.setI18n(file);
             }
         }
         config.setFile(base);

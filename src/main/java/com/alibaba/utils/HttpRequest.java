@@ -2,7 +2,11 @@ package com.alibaba.utils;
 
 import io.netty.handler.codec.http.HttpHeaders;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.StringUtils;
+import sun.util.resources.LocaleNames;
+
+import java.util.Locale;
 
 /**
  * HttpRequest : TODO: yuuji
@@ -19,8 +23,11 @@ public class HttpRequest {
     private String uri;
     private String[] uris;
     private String referer;
+    private Locale locale;
 
     public HttpRequest(io.netty.handler.codec.http.HttpRequest source) {
+        String language = source.headers().get(HttpHeaders.Names.ACCEPT_LANGUAGE);
+        this.locale = I18nUtils.toLocale(language);
         this.source = source;
         this.host = source.headers().get(HttpHeaders.Names.HOST);
         this.referer = source.headers().get(HttpHeaders.Names.REFERER);
@@ -30,6 +37,10 @@ public class HttpRequest {
 
     public HttpRequest(String url) {
         setUri(url);
+    }
+
+    public Locale getLocale() {
+        return locale;
     }
 
     public void setUri(String uri) {

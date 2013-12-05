@@ -2,22 +2,19 @@ package com.alibaba.spi;
 
 import com.alibaba.config.*;
 import com.alibaba.fastjson.JSONReader;
-import com.alibaba.utils.HtmlElement;
-import com.alibaba.utils.HttpRequest;
-import com.alibaba.utils.HttpResponse;
-import com.alibaba.utils.ResourceUtils;
+import com.alibaba.utils.*;
 import com.googlecode.htmlcompressor.compressor.HtmlCompressor;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.apache.commons.lang3.LocaleUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.context.Context;
+import org.apache.velocity.runtime.resource.Resource;
+import org.apache.velocity.runtime.resource.loader.ResourceLoader;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * PageSPI : TODO: yuuji
@@ -58,7 +55,6 @@ public class PageSPI {
         context.put("footer", new HtmlElement(footerHtml));
         return context;
     }
-
     public HttpResponse invoke(HttpRequest req) {
         String hosts = req.getHost();
         String pageName = req.getUriBefore(1);
@@ -79,11 +75,18 @@ public class PageSPI {
                     if (appConfig.getCss() != null) {
                         isPageCss = true;
                     }
-                    apps.add(new HtmlElement(merge(context, appConfig.getView())));
+                    Context appContext = new VelocityContext(context);
+                    if(appConfig.getI18n() != null) {
+                        appContext.put("i18n", I18nUtils.bundle(appConfig.getI18n(),req.getLocale()));
+                    }
+                    apps.add(new HtmlElement(merge(appContext, appConfig.getView())));
                 }
-                Context layoutContext = new VelocityContext();
-                layoutContext.put("apps", apps);
                 LayoutConfig layoutConfig = ConfigEngine.getLayoutConfig(segmentConfig.getLayout());
+                Context layoutContext = new VelocityContext(context);
+                layoutContext.put("apps", apps);
+                if(layoutConfig.getI18n() != null) {
+                    layoutContext.put("i18n", I18nUtils.bundle(layoutConfig.getI18n(),req.getLocale()));
+                }
                 if (layoutConfig.getJs() != null) {
                     isPageJs = true;
                 }
@@ -95,6 +98,9 @@ public class PageSPI {
             }
             context.put("segments", segments);
             LayoutConfig layoutConfig = ConfigEngine.getLayoutConfig(pageConfig.getView());
+            if(layoutConfig.getI18n() != null) {
+                context.put("i18n", I18nUtils.bundle(layoutConfig.getI18n(),req.getLocale()));
+            }
             if (isPageJs || layoutConfig.getJs() != null) {
                 String pageJs = "http://" + hosts + "/static/page.js?v=" + pageConfig.getLastModified();
                 context.put("js", new String[]{pageJs});

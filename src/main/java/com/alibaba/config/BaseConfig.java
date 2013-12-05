@@ -14,6 +14,15 @@ public class BaseConfig {
     private File view;
     private long lastModified;
     private File file;
+    private File i18n;
+
+    public File getI18n() {
+        return i18n;
+    }
+
+    public void setI18n(File i18n) {
+        this.i18n = i18n;
+    }
 
     public File getFile() {
         return file;
