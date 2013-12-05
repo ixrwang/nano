@@ -1,2 +1,2 @@
 mvn compile
-mvn exec:java -Dexec.mainClass="com.alibaba.HttpServer" -Dexec.args="80"
+nohup mvn exec:java -Dexec.mainClass="com.alibaba.HttpServer" -Dexec.args="80" &
