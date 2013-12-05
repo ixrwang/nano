@@ -34,7 +34,7 @@ public class HttpServer {
         // Wait until the server socket is closed.
         // In this example, this does not happen, but you can do that to gracefully
         // shut down your server.
-        System.out.println("HttpServer Start...");
+        System.out.println("HttpServer Port " + port + " Start...");
         future.channel().closeFuture().sync();
     }
 
