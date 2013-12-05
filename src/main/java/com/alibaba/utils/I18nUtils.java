@@ -1,12 +1,12 @@
 package com.alibaba.utils;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.Locale;
+import java.util.Properties;
 
 /**
  * I18nUtils : TODO: yuuji

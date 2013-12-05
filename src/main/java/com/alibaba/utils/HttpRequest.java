@@ -2,9 +2,7 @@ package com.alibaba.utils;
 
 import io.netty.handler.codec.http.HttpHeaders;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.StringUtils;
-import sun.util.resources.LocaleNames;
 
 import java.util.Locale;
 
