@@ -15,6 +15,8 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.FileInputStream;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashSet;
 
 /**
  * PageStaticSPI : TODO: yuuji
@@ -32,9 +34,14 @@ public class PageStaticSPI {
             PageConfig pageConfig = ConfigEngine.getPageConfig(pageName);
             StringWriter writer = new StringWriter();
             write(ConfigEngine.getLayoutConfig(pageConfig.getView()), writer, suffix);
+            HashSet<String> apps = new HashSet<String>();
             for (SegmentConfig segmentConfig : pageConfig.getSegments()) {
                 write(ConfigEngine.getLayoutConfig(segmentConfig.getLayout()), writer, suffix);
                 for (String appName : segmentConfig.getApps()) {
+                    if(apps.contains(appName)) {
+                        continue;
+                    }
+                    apps.add(appName);
                     write(ConfigEngine.getAppConfig(appName), writer, suffix);
                 }
             }
