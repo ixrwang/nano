@@ -2,6 +2,7 @@ package com.alibaba.spi;
 
 import com.alibaba.config.*;
 import com.alibaba.engine.ConfigEngine;
+import com.alibaba.engine.RequestContext;
 import com.alibaba.utils.*;
 import com.googlecode.htmlcompressor.compressor.HtmlCompressor;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -40,26 +41,30 @@ public class PageSPI {
         return writer.toString();
     }
 
-    private Context context(PageConfig pageConfig) {
+    private Context initContext(PageConfig pageConfig) {
         Context context = new VelocityContext();
         context.put("title", pageConfig.getTitle());
         context.put("pageName", pageConfig.getPageName());
+        context.put("pageConfig", pageConfig);
         File headerFile = ConfigEngine.getLayoutConfig(pageConfig.getHeader()).getFile();
         String headerHtml = merge(new VelocityContext(), headerFile);
         context.put("header", new HtmlElement(headerHtml));
         File footerFile = ConfigEngine.getLayoutConfig(pageConfig.getFooter()).getFile();
         String footerHtml = merge(new VelocityContext(), footerFile);
         context.put("footer", new HtmlElement(footerHtml));
+        RequestContext.setContext(context);
         return context;
     }
-    public HttpResponse invoke(HttpRequest req) {
+
+    public HttpResponse invoke() {
+        HttpRequest req = RequestContext.request();
         String hosts = req.getHost();
         String pageName = req.getUriBefore(1);
         HttpResponse res = new HttpResponse();
         boolean isPageJs = false, isPageCss = false;
         try {
             PageConfig pageConfig = ConfigEngine.getPageConfig(pageName);
-            Context context = context(pageConfig);
+            Context context = initContext(pageConfig);
             List<SegmentConfig> segmentsConfig = pageConfig.getSegments();
             List<HtmlElement> segments = new ArrayList<HtmlElement>();
             for (SegmentConfig segmentConfig : segmentsConfig) {
@@ -73,16 +78,16 @@ public class PageSPI {
                         isPageCss = true;
                     }
                     Context appContext = new VelocityContext(context);
-                    if(appConfig.getI18n() != null) {
-                        appContext.put("i18n", I18nUtils.bundle(appConfig.getI18n(),req.getLocale()));
+                    if (appConfig.getI18n() != null) {
+                        appContext.put("i18n", I18nUtils.bundle(appConfig.getI18n(), req.getLocale()));
                     }
                     apps.add(new HtmlElement(merge(appContext, appConfig.getView())));
                 }
                 LayoutConfig layoutConfig = ConfigEngine.getLayoutConfig(segmentConfig.getLayout());
                 Context layoutContext = new VelocityContext(context);
                 layoutContext.put("apps", apps);
-                if(layoutConfig.getI18n() != null) {
-                    layoutContext.put("i18n", I18nUtils.bundle(layoutConfig.getI18n(),req.getLocale()));
+                if (layoutConfig.getI18n() != null) {
+                    layoutContext.put("i18n", I18nUtils.bundle(layoutConfig.getI18n(), req.getLocale()));
                 }
                 if (layoutConfig.getJs() != null) {
                     isPageJs = true;
@@ -95,8 +100,8 @@ public class PageSPI {
             }
             context.put("segments", segments);
             LayoutConfig layoutConfig = ConfigEngine.getLayoutConfig(pageConfig.getView());
-            if(layoutConfig.getI18n() != null) {
-                context.put("i18n", I18nUtils.bundle(layoutConfig.getI18n(),req.getLocale()));
+            if (layoutConfig.getI18n() != null) {
+                context.put("i18n", I18nUtils.bundle(layoutConfig.getI18n(), req.getLocale()));
             }
             if (isPageJs || layoutConfig.getJs() != null) {
                 String pageJs = "http://" + hosts + "/static/page.js?v=" + pageConfig.getLastModified();

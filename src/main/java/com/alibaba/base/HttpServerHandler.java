@@ -1,5 +1,6 @@
 package com.alibaba.base;
 
+import com.alibaba.engine.RequestContext;
 import com.alibaba.spi.RequestDispatcherSPI;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -20,7 +21,9 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof HttpRequest) {
             HttpRequest req = (HttpRequest) msg;
-            new RequestDispatcherSPI().invoke(new com.alibaba.utils.HttpRequest(req)).writeContext(ctx);
+            RequestContext.init(new com.alibaba.utils.HttpRequest(req));
+            RequestContext.setResponse(new RequestDispatcherSPI().invoke());
+            RequestContext.response().writeContext(ctx);
         }
     }
 

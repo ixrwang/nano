@@ -4,6 +4,7 @@ import com.alibaba.config.BaseConfig;
 import com.alibaba.engine.ConfigEngine;
 import com.alibaba.config.PageConfig;
 import com.alibaba.config.SegmentConfig;
+import com.alibaba.engine.RequestContext;
 import com.alibaba.utils.ContentType;
 import com.alibaba.utils.HttpRequest;
 import com.alibaba.utils.HttpResponse;
@@ -23,7 +24,8 @@ import java.util.HashSet;
  */
 public class PageStaticSPI {
 
-    public HttpResponse invoke(HttpRequest req) {
+    public HttpResponse invoke() {
+        HttpRequest req = RequestContext.request();
         String suffix = req.getUriSuffix(1);
         req.setUri(req.getReferer());
         String pageName = req.getUriBefore(1);

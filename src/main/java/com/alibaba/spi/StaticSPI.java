@@ -1,5 +1,6 @@
 package com.alibaba.spi;
 
+import com.alibaba.engine.RequestContext;
 import com.alibaba.utils.HttpRequest;
 import com.alibaba.utils.HttpResponse;
 import com.googlecode.htmlcompressor.compressor.HtmlCompressor;
@@ -11,11 +12,12 @@ import io.netty.handler.codec.http.HttpResponseStatus;
  */
 public class StaticSPI {
 
-    public HttpResponse invoke(HttpRequest req) {
+    public HttpResponse invoke() {
+        HttpRequest req = RequestContext.request();
         if(req.getReferer() != null) {
             HttpRequest referer = new HttpRequest(req.getReferer());
             if ("page".equals(req.getUriBefore(1)) && "pages".equals(referer.getUri(0))) {
-                return new PageStaticSPI().invoke(req);
+                return new PageStaticSPI().invoke();
             }
         }
         return new HttpResponse(HttpResponseStatus.NOT_FOUND, null);

@@ -1,5 +1,6 @@
 package com.alibaba.spi;
 
+import com.alibaba.engine.RequestContext;
 import com.alibaba.utils.HttpRequest;
 import com.alibaba.utils.HttpResponse;
 import org.apache.commons.lang3.StringUtils;
@@ -13,14 +14,15 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
  */
 public class RequestDispatcherSPI {
 
-    public HttpResponse invoke(HttpRequest req) {
+    public HttpResponse invoke() {
+        HttpRequest req = RequestContext.request();
         if ("/bad-request".equals(req.getUri())) {
             HttpResponse res = new HttpResponse(BAD_REQUEST, null);
             return res;
         }else if ("pages".equals(req.getUri(0))) {
-            return new PageSPI().invoke(req);
+            return new PageSPI().invoke();
         } else if ("static".equals(req.getUri(0))) {
-            return new StaticSPI().invoke(req);
+            return new StaticSPI().invoke();
         } else {
             HttpResponse res = new HttpResponse(NOT_FOUND, null);
             return res;
