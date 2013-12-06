@@ -1,5 +1,9 @@
+#!/bin/bash
+port=$0
+if [ $# -lt 1 ]; then
+    port=8080
+fi
 main=com.alibaba.HttpServer
-port=80
 log=target/logs.txt
 pids=`ps gx | grep $main | grep $port | awk '{print $1}'`
 for pid in $pids
