@@ -1,6 +1,5 @@
 package com.alibaba.base;
 
-import com.alibaba.engine.RequestContext;
 import com.alibaba.spi.RequestDispatcherSPI;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;

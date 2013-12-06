@@ -2,7 +2,7 @@ package com.alibaba.spi;
 
 import com.alibaba.config.*;
 import com.alibaba.engine.ConfigEngine;
-import com.alibaba.engine.RequestContext;
+import com.alibaba.base.RequestContext;
 import com.alibaba.utils.*;
 import com.googlecode.htmlcompressor.compressor.HtmlCompressor;
 import io.netty.handler.codec.http.HttpResponseStatus;

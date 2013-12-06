@@ -1,9 +1,8 @@
 package com.alibaba.spi;
 
-import com.alibaba.engine.RequestContext;
+import com.alibaba.base.RequestContext;
 import com.alibaba.utils.HttpRequest;
 import com.alibaba.utils.HttpResponse;
-import org.apache.commons.lang3.StringUtils;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;

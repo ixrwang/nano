@@ -4,7 +4,7 @@ import com.alibaba.config.BaseConfig;
 import com.alibaba.engine.ConfigEngine;
 import com.alibaba.config.PageConfig;
 import com.alibaba.config.SegmentConfig;
-import com.alibaba.engine.RequestContext;
+import com.alibaba.base.RequestContext;
 import com.alibaba.utils.ContentType;
 import com.alibaba.utils.HttpRequest;
 import com.alibaba.utils.HttpResponse;
