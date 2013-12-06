@@ -1,7 +1,8 @@
 #!/bin/bash
-port=$0
 if [ $# -lt 1 ]; then
     port=8080
+else
+    port=$1
 fi
 main=com.alibaba.HttpServer
 log=target/logs.txt
