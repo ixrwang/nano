@@ -13,4 +13,4 @@ echo kill $pid
 done
 mvn clean compile
 rm -rf $log
-nohup mvn exec:java -Dexec.mainClass="$main" -Dexec.args="$port" > $log &
+nohup mvn exec:java -Dexec.mainClass="$main" -Dexec.args="$port" > $log & echo HttpServer Port $port Start...
