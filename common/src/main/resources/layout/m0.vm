@@ -1,0 +1,3 @@
+<div class="segment-m0">
+#foreach($app in $apps)$app.content#end
+</div>
