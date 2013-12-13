@@ -8,6 +8,7 @@ import com.alibaba.base.RequestContext;
 import com.alibaba.utils.ContentType;
 import com.alibaba.utils.HttpRequest;
 import com.alibaba.utils.HttpResponse;
+import com.alibaba.utils.ResourceUtils;
 import com.googlecode.htmlcompressor.compressor.Compressor;
 import com.googlecode.htmlcompressor.compressor.YuiCssCompressor;
 import com.googlecode.htmlcompressor.compressor.YuiJavaScriptCompressor;
@@ -15,6 +16,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import org.apache.commons.io.IOUtils;
 
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.HashSet;
 
@@ -39,7 +41,7 @@ public class PageStaticSPI {
             for (SegmentConfig segmentConfig : pageConfig.getSegments()) {
                 write(ConfigEngine.getLayoutConfig(segmentConfig.getLayout()), writer, suffix);
                 for (String appName : segmentConfig.getApps()) {
-                    if(apps.contains(appName)) {
+                    if (apps.contains(appName)) {
                         continue;
                     }
                     apps.add(appName);
@@ -63,10 +65,16 @@ public class PageStaticSPI {
 
     public void write(BaseConfig layoutConfig, StringWriter writer, String suffix) {
         try {
-            if ("js".equals(suffix) && layoutConfig.getJs() != null) {
-                writer.write(IOUtils.toString(new FileInputStream(layoutConfig.getJs())));
-            } else if ("css".equals(suffix) && layoutConfig.getCss() != null) {
-                writer.write(IOUtils.toString(new FileInputStream(layoutConfig.getCss())));
+            if ("js".equals(suffix)
+                    && layoutConfig.getJs() != null
+                    && layoutConfig.getJs().exists()) {
+                InputStream stream = ResourceUtils.getInputStream(layoutConfig.getJs());
+                writer.write(IOUtils.toString(stream));
+            } else if ("css".equals(suffix)
+                    && layoutConfig.getCss() != null
+                    && layoutConfig.getCss().exists()) {
+                InputStream stream = ResourceUtils.getInputStream(layoutConfig.getCss());
+                writer.write(IOUtils.toString(stream));
             }
         } catch (Exception ex) {
             throw new Error(ex);

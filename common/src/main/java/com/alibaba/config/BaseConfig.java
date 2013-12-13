@@ -1,6 +1,6 @@
 package com.alibaba.config;
 
-import java.io.File;
+import com.alibaba.utils.model.Resource;
 
 /**
  * BaseConfig : TODO: yuuji
@@ -9,35 +9,17 @@ import java.io.File;
 public class BaseConfig {
 
     private String name;
-    private File js;
-    private File css;
-    private File view;
-    private long lastModified;
-    private File file;
-    private File i18n;
+    private Resource view;
+    private Resource js;
+    private Resource css;
+    private Resource i18n;
 
-    public File getI18n() {
+    public Resource getI18n() {
         return i18n;
     }
 
-    public void setI18n(File i18n) {
+    public void setI18n(Resource i18n) {
         this.i18n = i18n;
-    }
-
-    public File getFile() {
-        return file;
-    }
-
-    public void setFile(File file) {
-        this.file = file;
-    }
-
-    public long getLastModified() {
-        return lastModified;
-    }
-
-    public void setLastModified(long lastModified) {
-        this.lastModified = lastModified;
     }
 
     public String getName() {
@@ -48,27 +30,27 @@ public class BaseConfig {
         this.name = name;
     }
 
-    public File getJs() {
+    public Resource getJs() {
         return js;
     }
 
-    public void setJs(File js) {
+    public void setJs(Resource js) {
         this.js = js;
     }
 
-    public File getCss() {
+    public Resource getCss() {
         return css;
     }
 
-    public void setCss(File css) {
+    public void setCss(Resource css) {
         this.css = css;
     }
 
-    public File getView() {
+    public Resource getView() {
         return view;
     }
 
-    public void setView(File view) {
+    public void setView(Resource view) {
         this.view = view;
     }
 }

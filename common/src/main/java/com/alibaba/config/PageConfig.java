@@ -1,5 +1,7 @@
 package com.alibaba.config;
 
+import com.alibaba.utils.model.Resource;
+
 import java.io.File;
 import java.util.List;
 
@@ -14,8 +16,7 @@ public class PageConfig {
     private String footer;
     private String title;
     private List<SegmentConfig> segments;
-    private long lastModified;
-    private File file;
+    private Resource resource;
 
     public String getPageName() {
         return pageName;
@@ -25,20 +26,12 @@ public class PageConfig {
         this.pageName = pageName;
     }
 
-    public File getFile() {
-        return file;
+    public Resource getResource() {
+        return resource;
     }
 
-    public void setFile(File file) {
-        this.file = file;
-    }
-
-    public long getLastModified() {
-        return lastModified;
-    }
-
-    public void setLastModified(long lastModified) {
-        this.lastModified = lastModified;
+    public void setResource(Resource resource) {
+        this.resource = resource;
     }
 
     public String getView() {

@@ -1,43 +1,88 @@
 package com.alibaba.utils;
 
-import org.apache.velocity.util.StringUtils;
+import com.alibaba.utils.model.Resource;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.net.URL;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
- * ResourceUtils : TODO: yuuji
- * yuuji 9:41 AM 12/5/13
+ * Created by yuuji on 12/12/13.
  */
-public class ResourceUtils {
+public class ResourceUtils extends org.springframework.util.ResourceUtils {
 
-    private static String basePath = ResourceUtils.class.getResource("/").getFile();
-
-
-    public static File getFile(String path) {
-        return new File(basePath + StringUtils.normalizePath(path));
-    }
-
-    public static String getClassPath(File file) {
-        return org.apache.commons.lang3.StringUtils.substringAfter(file.getPath(), basePath);
-    }
-
-    public static InputStream getInputStream(String path) {
+    private static JarFile getJarFile(URL url) {
         try {
-            File file = getFile(path);
-            if (!file.exists()) {
-                return null;
-            }
-            return new FileInputStream(file);
+            String urlStr = url.getFile();
+            String jarPath = urlStr.substring(5, urlStr.indexOf("!/"));
+            JarFile jarFile = new JarFile(jarPath);
+            return jarFile;
         } catch (IOException ex) {
-            throw new Error(ex);
+            return null;
         }
     }
 
-    public static long getLastModified(String path) {
-        File file = getFile(path);
-        return file.lastModified();
+    public static InputStream getInputStream(String resourceLocation) {
+        try {
+            URL url = getClassPathURL(resourceLocation);
+            if(url == null) {
+                return null;
+            }
+            if (isJarURL(url)) {
+                JarFile jarFile = getJarFile(url);
+                JarEntry jarEntry = jarFile.getJarEntry(resourceLocation);
+                return jarFile.getInputStream(jarEntry);
+            } else {
+                File file = new File(url.getFile());
+                return new FileInputStream(file);
+            }
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    public static InputStream getInputStream(Resource resource) {
+        return getInputStream(resource.getPath());
+    }
+
+    public static Resource getClassPathResource(String resourceLocation) {
+        Resource resource = new Resource();
+        resource.setPath(resourceLocation);
+        URL url = getClassPathURL(resourceLocation);
+        if(url == null) {
+            return resource;
+        }
+        if (isJarURL(url)) {
+            JarFile jarFile = getJarFile(url);
+            JarEntry jarEntry = jarFile.getJarEntry(resourceLocation);
+            if (jarEntry == null) {
+                return null;
+            }
+            resource.setDirectory(jarEntry.isDirectory());
+            resource.setExists(true);
+            return resource;
+        } else {
+            File file = new File(url.getFile());
+            resource.setDirectory(file.isDirectory());
+            if (file.exists()) {
+                resource.setExists(true);
+            }
+            return resource;
+        }
+    }
+
+    public static URL getClassPathURL(String resourceLocation) {
+        try {
+            URL url;
+            if (resourceLocation.startsWith(CLASSPATH_URL_PREFIX)) {
+                url = org.springframework.util.ResourceUtils.getURL(resourceLocation);
+            } else {
+                url = org.springframework.util.ResourceUtils.getURL(CLASSPATH_URL_PREFIX + resourceLocation);
+            }
+            return url;
+        } catch (IOException ex) {
+            return null;
+        }
     }
 }
