@@ -1,0 +1,7 @@
+apply plugin: 'application'
+
+mainClassName = 'name.ixr.nano.engine.DefaultEngine'
+
+dependencies {
+    compile project(':nano-engine')
+}

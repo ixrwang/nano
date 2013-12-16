@@ -1,1 +1,1 @@
-include 'common'
+include 'nano-common','nano-engine','nano-demo'

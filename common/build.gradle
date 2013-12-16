@@ -1,4 +1,0 @@
-apply plugin: 'application'
-
-mainClassName = 'com.alibaba.HttpServer'
-

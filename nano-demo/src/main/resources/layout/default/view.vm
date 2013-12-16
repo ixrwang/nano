@@ -1,0 +1,21 @@
+<html>
+<head>
+<title>$title</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+#foreach($c in $css)
+<link type="text/css" rel="stylesheet" href="$c"/>
+#end
+#foreach($j in $js)
+<script src="$j" type="text/javascript"></script>
+#end
+</head>
+<body class="$pageName">
+$!header.content
+<div id="content">
+#foreach($segment in $segments)
+$segment.content
+#end
+</div>
+$!footer.content
+</body>
+</html>
