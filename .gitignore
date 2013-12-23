@@ -1,5 +1,7 @@
 build/
 classes/
-.gradle/
 *.iml
 .idea/
+.gradle/
+gradlew
+gradlew.bat
