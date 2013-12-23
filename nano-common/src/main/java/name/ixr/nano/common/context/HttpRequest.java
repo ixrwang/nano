@@ -3,15 +3,16 @@ package name.ixr.nano.common.context;
 import io.netty.handler.codec.http.Cookie;
 import io.netty.handler.codec.http.CookieDecoder;
 import io.netty.handler.codec.http.HttpHeaders;
+import name.ixr.nano.common.utils.AntPathMatcherUtils;
 import name.ixr.nano.common.utils.I18nUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.print.attribute.standard.ReferenceUriSchemesSupported;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * HttpRequest : TODO: yuuji
@@ -26,8 +27,7 @@ public class HttpRequest {
     private io.netty.handler.codec.http.HttpRequest source;
     private String host;
     private String uri;
-    private String[] uris;
-    private String referer;
+    private String ref;
     private Locale locale;
     private Map<String, Cookie> cookies = new HashMap<>();
 
@@ -40,8 +40,8 @@ public class HttpRequest {
         this.locale = I18nUtils.toLocale(language);
         this.source = source;
         this.host = source.headers().get(HttpHeaders.Names.HOST);
-        this.referer = source.headers().get(HttpHeaders.Names.REFERER);
-        this.referer = StringUtils.substringAfter(this.referer, this.host);
+        this.ref = source.headers().get(HttpHeaders.Names.REFERER);
+        this.ref = StringUtils.substringAfter(this.ref, this.host);
         setUri(source.getUri());
         String cookies = source.headers().get(HttpHeaders.Names.COOKIE);
         if (StringUtils.isNotBlank(cookies)) {
@@ -61,12 +61,7 @@ public class HttpRequest {
     }
 
     public void setUri(String uri) {
-        this.uri = uri;
-        uris = uri.split(URI_SPLIT);
-        uris = ArrayUtils.removeElement(uris, StringUtils.EMPTY);
-        if ("/".equals(getUri()) || "index".equals(getUriBefore(0))) {
-            setUri("/pages/index.htm");
-        }
+        this.uri = url(uri);
     }
 
     public io.netty.handler.codec.http.HttpRequest getSource() {
@@ -77,38 +72,20 @@ public class HttpRequest {
         return host;
     }
 
-    public String getReferer() {
-        return referer;
+    public String getRef() {
+        return url(ref);
+    }
+
+    private String url(String url) {
+        if ("/".equals(url) || AntPathMatcherUtils.match("/index.*", url)) {
+            return "/pages/index.htm";
+        } else {
+            return url;
+        }
     }
 
     public String getUri() {
         return uri;
     }
 
-    public String getUriSuffix(int idx) {
-        String suffix = getUriAfter(idx);
-        suffix = StringUtils.substringBefore(suffix, PARAM_BEGIN);
-        return suffix;
-    }
-
-    public String getUriAfter(int idx) {
-        return StringUtils.substringAfter(getUri(idx), HTML_SPLIT);
-    }
-
-    public String getUriBefore(int idx) {
-        return StringUtils.substringBefore(getUri(idx), HTML_SPLIT);
-    }
-
-    public String getUri(int idx) {
-        if (idx < uris.length) {
-            return uris[idx];
-        } else {
-            return null;
-        }
-
-    }
-
-    public String[] getUris() {
-        return uris;
-    }
 }

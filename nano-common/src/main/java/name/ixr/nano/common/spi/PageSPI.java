@@ -10,6 +10,7 @@ import name.ixr.nano.common.context.HttpRequest;
 import name.ixr.nano.common.context.HttpResponse;
 import name.ixr.nano.common.context.RequestContext;
 import name.ixr.nano.common.engine.ConfigEngine;
+import name.ixr.nano.common.utils.AntPathMatcherUtils;
 import name.ixr.nano.common.utils.I18nUtils;
 import name.ixr.nano.common.utils.ResourceUtils;
 import name.ixr.nano.common.utils.ResourceUtils.Resource;
@@ -31,9 +32,11 @@ import java.util.Properties;
 @Component
 public class PageSPI extends UrlRoutingSPI {
 
+    public static final String URL_ROUTE = "/pages/{pageName:.*}{split:\\.}{suffix:.*}";
+
     @Override
     public String route() {
-        return "/pages/{pageName:.*}{split:\\.}{suffix:.*}";
+        return URL_ROUTE;
     }
 
     private static VelocityEngine engine;
@@ -75,7 +78,7 @@ public class PageSPI extends UrlRoutingSPI {
         HttpRequest req = RequestContext.request();
         HttpResponse res = RequestContext.response();
         String hosts = req.getHost();
-        String pageName = getUrlParam("pageName");
+        String pageName = AntPathMatcherUtils.getUrlParam(route(), RequestContext.request().getUri(), "pageName");
         boolean isPageJs = false, isPageCss = false;
         PageConfig pageConfig = ConfigEngine.getPageConfig(pageName);
         Context context = initContext(pageConfig);

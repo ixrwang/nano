@@ -8,6 +8,7 @@ import name.ixr.nano.common.context.RequestContext;
 import name.ixr.nano.common.context.ContentType;
 import name.ixr.nano.common.context.HttpRequest;
 import name.ixr.nano.common.context.HttpResponse;
+import name.ixr.nano.common.utils.AntPathMatcherUtils;
 import name.ixr.nano.common.utils.ResourceUtils;
 import com.googlecode.htmlcompressor.compressor.Compressor;
 import com.googlecode.htmlcompressor.compressor.YuiCssCompressor;
@@ -28,15 +29,14 @@ public class PageStaticSPI extends UrlRoutingSPI{
 
     @Override
     public String route() {
-        return "/static/page.{suffix:(js|css)}";
+        return "/static/page.{suffix:js|css}";
     }
 
     public void invoke() throws Exception {
         HttpRequest req = RequestContext.request();
         HttpResponse res = RequestContext.response();
-        String suffix = req.getUriSuffix(1);
-        req.setUri(req.getReferer());
-        String pageName = req.getUriBefore(1);
+        String suffix = AntPathMatcherUtils.getUrlParam(route(), RequestContext.request().getUri(), "suffix");
+        String pageName = AntPathMatcherUtils.getUrlParam(PageSPI.URL_ROUTE, req.getRef(), "pageName");
         res.setContentType(ContentType.findContentType(suffix));
         PageConfig pageConfig = ConfigEngine.getPageConfig(pageName);
         StringWriter writer = new StringWriter();

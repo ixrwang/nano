@@ -6,6 +6,7 @@ import name.ixr.nano.common.context.PipelineContext;
 import name.ixr.nano.common.context.RequestContext;
 import name.ixr.nano.common.context.SpringContext;
 import name.ixr.nano.common.pipeline.PipelineValue;
+import name.ixr.nano.common.utils.AntPathMatcherUtils;
 import org.springframework.stereotype.Component;
 
 import javax.swing.*;
@@ -37,7 +38,7 @@ public class RequestDispatcherSPI {
         }
         Map<String, UrlRoutingSPI> routes = SpringContext.getContext().getBeansOfType(UrlRoutingSPI.class);
         for (UrlRoutingSPI route : routes.values()) {
-            if (route.match()) {
+            if (AntPathMatcherUtils.match(route.route(), RequestContext.request().getUri())) {
                 try {
                     route.invoke();
                 } catch (Exception | Error ex) {
