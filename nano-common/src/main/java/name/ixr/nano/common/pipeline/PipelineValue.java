@@ -5,6 +5,12 @@ import name.ixr.nano.common.context.PipelineContext;
 /**
  * Created by yuuji on 12/16/13.
  */
-public interface PipelineValue {
-    void invoke(PipelineContext pipelineContext);
+public abstract class PipelineValue {
+    public static enum Result {
+        NEXT, BREAK, RETURN
+    }
+
+    public Result invoke(PipelineContext pipelineContext) {
+        return Result.NEXT;
+    }
 }

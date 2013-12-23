@@ -1,11 +1,17 @@
 package name.ixr.nano.common.context;
 
+import io.netty.handler.codec.http.Cookie;
+import io.netty.handler.codec.http.CookieDecoder;
 import io.netty.handler.codec.http.HttpHeaders;
 import name.ixr.nano.common.utils.I18nUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * HttpRequest : TODO: yuuji
@@ -23,6 +29,11 @@ public class HttpRequest {
     private String[] uris;
     private String referer;
     private Locale locale;
+    private Map<String, Cookie> cookies = new HashMap<>();
+
+    public Cookie getCookie(String name) {
+        return cookies.get(name);
+    }
 
     public HttpRequest(io.netty.handler.codec.http.HttpRequest source) {
         String language = source.headers().get(HttpHeaders.Names.ACCEPT_LANGUAGE);
@@ -32,6 +43,13 @@ public class HttpRequest {
         this.referer = source.headers().get(HttpHeaders.Names.REFERER);
         this.referer = StringUtils.substringAfter(this.referer, this.host);
         setUri(source.getUri());
+        String cookies = source.headers().get(HttpHeaders.Names.COOKIE);
+        if (StringUtils.isNotBlank(cookies)) {
+            Set<Cookie> cookieSet = CookieDecoder.decode(cookies);
+            for (Cookie cookie : cookieSet) {
+                this.cookies.put(cookie.getName(), cookie);
+            }
+        }
     }
 
     public HttpRequest(String url) {

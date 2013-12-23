@@ -1,5 +1,6 @@
 package name.ixr.nano.common.context;
 
+import org.apache.velocity.VelocityContext;
 import org.apache.velocity.context.Context;
 
 /**
@@ -26,13 +27,7 @@ public class RequestContext {
 
     public static void init(HttpRequest request) {
         requestThreadLocal.set(request);
-    }
-
-    public static void setResponse(HttpResponse response) {
-        responseThreadLocal.set(response);
-    }
-
-    public static void setContext(Context context) {
-        contextThreadLocal.set(context);
+        responseThreadLocal.set(new HttpResponse());
+        contextThreadLocal.set(new VelocityContext());
     }
 }

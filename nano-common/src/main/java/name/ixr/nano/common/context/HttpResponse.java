@@ -2,12 +2,23 @@ package name.ixr.nano.common.context;
 
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.Cookie;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.DefaultHttpHeaders;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.ServerCookieEncoder;
+
+import java.util.Set;
+import java.util.TreeSet;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpResponseStatus.*;
+import static io.netty.handler.codec.http.HttpHeaders.Names.SET_COOKIE;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
 /**
  * HttpResponse : TODO: yuuji
@@ -21,8 +32,15 @@ public class HttpResponse extends DefaultFullHttpResponse {
 
     private ContentType contentType = ContentType.HTML;
 
+
+    private Set<Cookie> cookies = new TreeSet<>();
+
     public HttpHeaders getHeaders() {
         return headers;
+    }
+
+    public void addCookie(Cookie cookie) {
+        cookies.add(cookie);
     }
 
     public HttpResponse() {
@@ -33,7 +51,7 @@ public class HttpResponse extends DefaultFullHttpResponse {
         this(HttpVersion.HTTP_1_1, status);
     }
 
-    public HttpResponse(HttpResponseStatus status,ContentType contentType) {
+    public HttpResponse(HttpResponseStatus status, ContentType contentType) {
         this(HttpVersion.HTTP_1_1, status);
         this.contentType = contentType;
     }
@@ -52,6 +70,14 @@ public class HttpResponse extends DefaultFullHttpResponse {
 
     public void writeContext(ChannelHandlerContext ctx) {
         writeContext(ctx, contentType);
+    }
+    public void mark(HttpResponseStatus status) {
+        super.setStatus(status);
+    }
+
+    public void mark(HttpResponseStatus status, ContentType contentType) {
+        super.setStatus(status);
+        this.contentType = contentType;
     }
 
     public void writeContext(ChannelHandlerContext ctx, ContentType contentType) {
@@ -74,11 +100,18 @@ public class HttpResponse extends DefaultFullHttpResponse {
         }
         if (keepAlive) {
             headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
-            headers().add(headers);
+            addHeaders();
             ctx.write(this);
         } else {
-            headers().add(headers);
+            addHeaders();
             ctx.write(this).addListener(ChannelFutureListener.CLOSE);
+        }
+    }
+
+    private void addHeaders() {
+        headers().add(headers);
+        for (Cookie cookie : cookies) {
+            headers().add(SET_COOKIE, ServerCookieEncoder.encode(cookie));
         }
     }
 }

@@ -12,8 +12,8 @@ import name.ixr.nano.common.utils.ResourceUtils;
 import com.googlecode.htmlcompressor.compressor.Compressor;
 import com.googlecode.htmlcompressor.compressor.YuiCssCompressor;
 import com.googlecode.htmlcompressor.compressor.YuiJavaScriptCompressor;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import org.apache.commons.io.IOUtils;
+import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -23,43 +23,42 @@ import java.util.HashSet;
  * PageStaticSPI : TODO: yuuji
  * yuuji 5:39 PM 12/4/13
  */
-public class PageStaticSPI {
+@Component
+public class PageStaticSPI extends UrlRoutingSPI{
 
-    public HttpResponse invoke() {
+    @Override
+    public String route() {
+        return "/static/page.{suffix:(js|css)}";
+    }
+
+    public void invoke() throws Exception {
         HttpRequest req = RequestContext.request();
+        HttpResponse res = RequestContext.response();
         String suffix = req.getUriSuffix(1);
         req.setUri(req.getReferer());
         String pageName = req.getUriBefore(1);
-        HttpResponse res = new HttpResponse();
         res.setContentType(ContentType.findContentType(suffix));
-        try {
-            PageConfig pageConfig = ConfigEngine.getPageConfig(pageName);
-            StringWriter writer = new StringWriter();
-            write(ConfigEngine.getLayoutConfig(pageConfig.getView()), writer, suffix);
-            HashSet<String> apps = new HashSet<String>();
-            for (SegmentConfig segmentConfig : pageConfig.getSegments()) {
-                write(ConfigEngine.getLayoutConfig(segmentConfig.getLayout()), writer, suffix);
-                for (String appName : segmentConfig.getApps()) {
-                    if (apps.contains(appName)) {
-                        continue;
-                    }
-                    apps.add(appName);
-                    write(ConfigEngine.getAppConfig(appName), writer, suffix);
+        PageConfig pageConfig = ConfigEngine.getPageConfig(pageName);
+        StringWriter writer = new StringWriter();
+        write(ConfigEngine.getLayoutConfig(pageConfig.getView()), writer, suffix);
+        HashSet<String> apps = new HashSet<String>();
+        for (SegmentConfig segmentConfig : pageConfig.getSegments()) {
+            write(ConfigEngine.getLayoutConfig(segmentConfig.getLayout()), writer, suffix);
+            for (String appName : segmentConfig.getApps()) {
+                if (apps.contains(appName)) {
+                    continue;
                 }
+                apps.add(appName);
+                write(ConfigEngine.getAppConfig(appName), writer, suffix);
             }
-            Compressor compressor = null;
-            if ("js".equals(suffix)) {
-                compressor = new YuiJavaScriptCompressor();
-            } else if ("css".equals(suffix)) {
-                compressor = new YuiCssCompressor();
-            }
-            res.content().writeBytes(compressor.compress(writer.toString()).getBytes());
-        } catch (Exception ex) {
-            HttpResponse response = new HttpResponse(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-            response.content().writeBytes(ex.toString().getBytes());
-            return response;
         }
-        return res;
+        Compressor compressor = null;
+        if ("js".equals(suffix)) {
+            compressor = new YuiJavaScriptCompressor();
+        } else if ("css".equals(suffix)) {
+            compressor = new YuiCssCompressor();
+        }
+        res.content().writeBytes(compressor.compress(writer.toString()).getBytes());
     }
 
     public void write(BaseConfig layoutConfig, StringWriter writer, String suffix) {

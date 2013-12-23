@@ -16,7 +16,7 @@ public class StaticSPI {
         if(req.getReferer() != null) {
             HttpRequest referer = new HttpRequest(req.getReferer());
             if ("page".equals(req.getUriBefore(1)) && "pages".equals(referer.getUri(0))) {
-                return new PageStaticSPI().invoke();
+                //return new PageStaticSPI().invoke();
             }
         }
         return new HttpResponse(HttpResponseStatus.NOT_FOUND, null);

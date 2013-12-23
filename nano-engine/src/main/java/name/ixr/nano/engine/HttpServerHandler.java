@@ -1,6 +1,7 @@
 package name.ixr.nano.engine;
 
 import name.ixr.nano.common.context.RequestContext;
+import name.ixr.nano.common.context.SpringContext;
 import name.ixr.nano.common.spi.RequestDispatcherSPI;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -21,8 +22,9 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof HttpRequest) {
             HttpRequest req = (HttpRequest) msg;
+            RequestDispatcherSPI dispatcherSPI = SpringContext.getContext().getBean(RequestDispatcherSPI.class);
             RequestContext.init(new name.ixr.nano.common.context.HttpRequest(req));
-            RequestContext.setResponse(new RequestDispatcherSPI().invoke());
+            dispatcherSPI.invoke();
             RequestContext.response().writeContext(ctx);
         }
     }
